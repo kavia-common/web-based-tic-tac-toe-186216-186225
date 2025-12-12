@@ -1,6 +1,10 @@
 import React from 'react';
 import Cell from './Cell.jsx';
 
+if (!import.meta.env.VITE_APP_REQUIRED_KEY) {
+  throw new Error('VITE_APP_REQUIRED_KEY is missing! Breaking build.');
+}
+
 /**
  * Board component responsible for rendering a 3x3 grid of cells.
  *
