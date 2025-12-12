@@ -1,15 +1,17 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
 import App from './App.jsx';
 import './style.css';
 
 // PUBLIC_INTERFACE
-function bootstrap() {
+export function bootstrap() {
   /**
    * Entry point for the Tic Tac Toe web app.
    *
    * This mounts the React <App /> component into the #app element defined in index.html.
    * The app is completely client-side and does not require any backend services.
+   * React Router is used to provide a multi-page flow (Start, Config, Game).
    */
   const rootElement = document.getElementById('app');
 
@@ -24,7 +26,9 @@ function bootstrap() {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
     <React.StrictMode>
-      <App />
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
     </React.StrictMode>,
   );
 }

@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Board from './Board.jsx';
+import { getEasyMove, getHardMove, getMediumMove } from '../utils/ai.js';
 
 const INITIAL_BOARD = Array(9).fill(null);
 
@@ -37,18 +38,42 @@ export function calculateWinner(squares) {
 }
 
 /**
+ * Resolve a difficulty label into a human-readable string.
+ *
+ * @param {"easy"|"medium"|"hard"|null} difficulty - Difficulty identifier.
+ * @returns {string} Human readable difficulty.
+ */
+function getDifficultyLabel(difficulty) {
+  if (!difficulty) return '—';
+  switch (difficulty) {
+    case 'easy':
+      return 'Easy';
+    case 'medium':
+      return 'Medium';
+    case 'hard':
+      return 'Hard';
+    default:
+      return '—';
+  }
+}
+
+/**
  * Top-level game state container.
  *
- * Manages:
- * - board state
- * - current player
- * - derived game status (turn, win, draw)
- * - optional move history (with simple jump-to-move navigation)
+ * PUBLIC_INTERFACE
+ * @param {Object} props - Game configuration.
+ * @param {"hvh"|"hvc"} props.mode - Game mode: human vs human ("hvh") or human vs computer ("hvc").
+ * @param {"easy"|"medium"|"hard"} [props.aiDifficulty="easy"] - AI difficulty when in "hvc" mode.
+ * @param {"X"|"O"} [props.playerIcon="X"] - Human player's icon when in "hvc" mode.
  *
- * No backend calls are made; everything is computed on the client.
+ * In hvh mode, the game behaves as a classic two-player local Tic Tac Toe with undo/redo.
+ * In hvc mode, the human always moves as `playerIcon`, and the AI plays the other symbol.
+ * The board disables interaction while it is the AI's turn or after game over.
  */
-// PUBLIC_INTERFACE
-function Game() {
+ // PUBLIC_INTERFACE
+function Game({ mode = 'hvh', aiDifficulty = 'easy', playerIcon = 'X' }) {
+  const isVsComputer = mode === 'hvc';
+
   const [history, setHistory] = useState([INITIAL_BOARD]);
   const [currentMove, setCurrentMove] = useState(0);
   const [xIsNext, setXIsNext] = useState(true);
@@ -67,15 +92,39 @@ function Game() {
   const isDraw = !winner && isBoardFull;
   const gameOver = Boolean(winner || isDraw);
 
+  const humanSymbol = isVsComputer ? playerIcon : null;
+  const aiSymbol = isVsComputer ? (playerIcon === 'X' ? 'O' : 'X') : null;
+
+  const currentPlayerSymbol = xIsNext ? 'X' : 'O';
+  const isHumanTurn = !isVsComputer || currentPlayerSymbol === humanSymbol;
+  const isAITurn = isVsComputer && currentPlayerSymbol === aiSymbol;
+
   const statusMessage = useMemo(() => {
     if (winner) {
+      if (isVsComputer) {
+        if (winner === humanSymbol) return `You win! (${winner})`;
+        if (winner === aiSymbol) return `Computer wins. (${winner})`;
+      }
       return `Winner: ${winner}`;
     }
     if (isDraw) {
       return 'Draw: No more moves left.';
     }
-    return `Next player: ${xIsNext ? 'X' : 'O'}`;
-  }, [winner, isDraw, xIsNext]);
+    if (isVsComputer) {
+      return isHumanTurn
+        ? `Your turn: ${currentPlayerSymbol}`
+        : `Computer is thinking… (${currentPlayerSymbol})`;
+    }
+    return `Next player: ${currentPlayerSymbol}`;
+  }, [
+    winner,
+    isDraw,
+    isVsComputer,
+    isHumanTurn,
+    currentPlayerSymbol,
+    humanSymbol,
+    aiSymbol,
+  ]);
 
   const statusToneClass = winner
     ? 't3-status--winner'
@@ -84,12 +133,16 @@ function Game() {
       : 't3-status--turn';
 
   const handleCellClick = (index) => {
-    if (gameOver || currentBoard[index]) {
+    // Block interaction when:
+    // - game is over, or
+    // - the target cell is already filled, or
+    // - it is the AI's turn in vs-computer mode.
+    if (gameOver || currentBoard[index] || isAITurn) {
       return;
     }
 
     const nextBoard = currentBoard.slice();
-    nextBoard[index] = xIsNext ? 'X' : 'O';
+    nextBoard[index] = currentPlayerSymbol;
 
     const nextHistory = history.slice(0, currentMove + 1);
     nextHistory.push(nextBoard);
@@ -105,8 +158,8 @@ function Game() {
     setXIsNext(true);
   };
 
-  const canUndo = currentMove > 0;
-  const canRedo = currentMove < history.length - 1;
+  const canUndo = !isVsComputer && currentMove > 0;
+  const canRedo = !isVsComputer && currentMove < history.length - 1;
 
   const handleUndo = () => {
     if (!canUndo) return;
@@ -124,6 +177,68 @@ function Game() {
     setXIsNext(nextMove % 2 === 0);
   };
 
+  /**
+   * Trigger AI move when:
+   * - The mode is vs-computer.
+   * - It is currently the AI's turn.
+   * - The game is not over.
+   */
+  useEffect(() => {
+    if (!isVsComputer || !isAITurn || gameOver) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const makeAIMove = () => {
+      const boardCopy = currentBoard.slice();
+      let aiMoveIndex = null;
+
+      if (aiDifficulty === 'hard') {
+        aiMoveIndex = getHardMove(boardCopy, aiSymbol, humanSymbol);
+      } else if (aiDifficulty === 'medium') {
+        aiMoveIndex = getMediumMove(boardCopy, aiSymbol, humanSymbol);
+      } else {
+        aiMoveIndex = getEasyMove(boardCopy);
+      }
+
+      if (aiMoveIndex === null || cancelled) {
+        return;
+      }
+
+      const newBoard = boardCopy.slice();
+      if (newBoard[aiMoveIndex] !== null) {
+        // Extremely unlikely: stale state; bail out defensively.
+        return;
+      }
+      newBoard[aiMoveIndex] = aiSymbol;
+
+      setHistory((prevHistory) => {
+        const trimmed = prevHistory.slice(0, currentMove + 1);
+        return [...trimmed, newBoard];
+      });
+      setCurrentMove((prevMove) => prevMove + 1);
+      setXIsNext((prev) => !prev);
+    };
+
+    // Small timeout to feel more natural and ensure state has settled.
+    const timeoutId = window.setTimeout(makeAIMove, 300);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [
+    aiDifficulty,
+    aiSymbol,
+    currentBoard,
+    currentMove,
+    gameOver,
+    humanSymbol,
+    isAITurn,
+    isVsComputer,
+  ]);
+
   return (
     <div className="t3-card" role="group" aria-label="Tic Tac Toe game area">
       <div className={`t3-status ${statusToneClass}`} aria-live="polite">
@@ -131,12 +246,39 @@ function Game() {
         <span className="t3-status-message">{statusMessage}</span>
       </div>
 
+      <div className="t3-meta t3-meta--game-info" aria-label="Game configuration">
+        <div className="t3-chip-row">
+          <span className="t3-chip" aria-label={`Mode: ${isVsComputer ? 'Vs Computer' : 'Two players'}`}>
+            <span className="t3-chip-label">Mode</span>
+            <span className="t3-chip-value">{isVsComputer ? 'Vs Computer' : 'Two players'}</span>
+          </span>
+          <span
+            className="t3-chip"
+            aria-label={`Difficulty: ${getDifficultyLabel(isVsComputer ? aiDifficulty : null)}`}
+          >
+            <span className="t3-chip-label">Difficulty</span>
+            <span className="t3-chip-value">
+              {isVsComputer ? getDifficultyLabel(aiDifficulty) : '—'}
+            </span>
+          </span>
+          <span
+            className="t3-chip"
+            aria-label={`Your icon: ${isVsComputer ? humanSymbol : 'Both'}`}
+          >
+            <span className="t3-chip-label">Player icon</span>
+            <span className="t3-chip-value">
+              {isVsComputer ? humanSymbol : 'X & O'}
+            </span>
+          </span>
+        </div>
+      </div>
+
       <div className="t3-board-wrapper">
         <Board
           squares={currentBoard}
           onCellClick={handleCellClick}
           winningLine={winningLine}
-          gameOver={gameOver}
+          gameOver={gameOver || isAITurn}
         />
       </div>
 
@@ -145,27 +287,32 @@ function Game() {
           type="button"
           className="t3-button t3-button--primary"
           onClick={handleReset}
+          aria-label="Reset the current game"
         >
           Reset game
         </button>
-        <div className="t3-controls-group">
-          <button
-            type="button"
-            className="t3-button t3-button--secondary"
-            onClick={handleUndo}
-            disabled={!canUndo}
-          >
-            Undo
-          </button>
-          <button
-            type="button"
-            className="t3-button t3-button--secondary"
-            onClick={handleRedo}
-            disabled={!canRedo}
-          >
-            Redo
-          </button>
-        </div>
+        {!isVsComputer && (
+          <div className="t3-controls-group">
+            <button
+              type="button"
+              className="t3-button t3-button--secondary"
+              onClick={handleUndo}
+              disabled={!canUndo}
+              aria-label="Undo last move"
+            >
+              Undo
+            </button>
+            <button
+              type="button"
+              className="t3-button t3-button--secondary"
+              onClick={handleRedo}
+              disabled={!canRedo}
+              aria-label="Redo move"
+            >
+              Redo
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="t3-meta">
