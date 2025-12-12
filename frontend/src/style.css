@@ -52,7 +52,9 @@ body {
   display: flex;
   align-items: stretch;
   justify-content: center;
-  background: radial-gradient(circle at top, rgba(37, 99, 235, 0.08), transparent 55%),
+  background:
+    radial-gradient(circle at top left, rgba(37, 99, 235, 0.12), transparent 52%),
+    radial-gradient(circle at bottom right, rgba(15, 23, 42, 0.06), transparent 55%),
     linear-gradient(to bottom right, rgba(37, 99, 235, 0.04), #f9fafb);
   color: var(--t3-color-text);
 }
@@ -109,23 +111,112 @@ body {
   justify-content: center;
 }
 
+/* Start page layout wrapper */
+.t3-start-page {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
 .t3-card {
-  background: radial-gradient(circle at top, rgba(37, 99, 235, 0.06), transparent 55%),
-    var(--t3-color-surface);
-  border-radius: 24px;
-  padding: 1.75rem 1.75rem 1.5rem;
+  background:
+    radial-gradient(circle at top, rgba(37, 99, 235, 0.08), transparent 60%),
+    linear-gradient(to bottom right, rgba(37, 99, 235, 0.04), var(--t3-color-surface));
+  border-radius: 26px;
+  padding: 1.9rem 1.9rem 1.55rem;
   box-shadow: var(--t3-shadow-soft);
   border: 1px solid rgba(148, 163, 184, 0.18);
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  width: min(480px, 100%);
+  gap: 1.6rem;
+  width: min(500px, 100%);
 }
 
 /* Start page enhancements */
 
 .t3-card--start {
   align-items: stretch;
+  background:
+    radial-gradient(circle at top, rgba(37, 99, 235, 0.12), transparent 65%),
+    linear-gradient(to bottom right, rgba(37, 99, 235, 0.06), var(--t3-color-surface));
+  position: relative;
+  overflow: hidden;
+}
+
+.t3-card--start::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at top right, rgba(148, 163, 184, 0.4), transparent 55%);
+  opacity: 0.22;
+  pointer-events: none;
+}
+
+/* keep content above decorative layer */
+.t3-card--start > * {
+  position: relative;
+}
+
+.t3-start-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.t3-start-emblem {
+  width: 48px;
+  height: 48px;
+  border-radius: 18px;
+  background: radial-gradient(circle at 20% 0, rgba(255, 255, 255, 0.9), rgba(37, 99, 235, 0.2));
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.36);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  padding: 6px;
+  gap: 4px;
+  position: relative;
+}
+
+.t3-start-emblem-square {
+  border-radius: 9px;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  background: rgba(15, 23, 42, 0.06);
+}
+
+.t3-start-emblem-square--x {
+  border-color: rgba(37, 99, 235, 0.9);
+}
+
+.t3-start-emblem-square--o {
+  border-color: rgba(245, 158, 11, 0.9);
+}
+
+.t3-start-emblem-orb {
+  position: absolute;
+  inset: auto 4px 4px auto;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: radial-gradient(circle, #f9fafb, #2563eb);
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.45);
+}
+
+.t3-start-heading {
+  flex: 1;
+}
+
+.t3-start-title {
+  margin: 0 0 0.25rem;
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--t3-color-text);
+}
+
+.t3-start-tagline {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--t3-color-muted);
 }
 
 .t3-start-content {
@@ -150,12 +241,82 @@ body {
   width: 100%;
   justify-content: space-between;
   align-items: center;
+  padding-inline: 1.3rem;
+  text-align: left;
 }
+
+.t3-start-button--primary {
+  position: relative;
+}
+
+.t3-start-button--primary::after {
+  content: 'Recommended';
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.1);
+  color: #e5e7eb;
+  margin-left: 0.6rem;
+}
+
+.t3-start-button--secondary {
+  background: linear-gradient(
+    135deg,
+    rgba(245, 158, 11, 0.12),
+    rgba(249, 250, 251, 0.98)
+  );
+  border-color: rgba(245, 158, 11, 0.45);
+}
+
+.t3-start-button-main {
+  font-size: 0.95rem;
+}
+
 
 .t3-start-button-caption {
   font-size: 0.78rem;
   font-weight: 500;
   opacity: 0.9;
+}
+
+/* Compact footer for start card */
+
+.t3-start-footer {
+  margin-top: 0.4rem;
+  padding-top: 0.7rem;
+  border-top: 1px dashed rgba(148, 163, 184, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.78rem;
+}
+
+.t3-start-footer-text {
+  margin: 0;
+  color: var(--t3-color-muted);
+}
+
+.t3-start-footer-links {
+  display: inline-flex;
+  gap: 0.6rem;
+  opacity: 0.8;
+}
+
+.t3-start-footer-links span {
+  position: relative;
+}
+
+.t3-start-footer-links span::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(to right, rgba(37, 99, 235, 0.45), transparent);
+  opacity: 0.4;
 }
 
 /* Config page */
@@ -482,7 +643,121 @@ body {
   text-transform: uppercase;
   cursor: pointer;
   transition:
+    box-shadow var(--t3-transition-fast),
+    background var(--t3-transition-fast),
+    color var(--t3-transition-fast),
+    opacity var(--t3-transition-fast),
+    transform var(--t3-transition-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.t3-button:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow:
+    0 0 0 1px #ffffff,
+    0 0 0 3px rgba(37, 99, 235, 0.9),
+    0 10px 24px rgba(15, 23, 42, 0.25);
+  transform: translateY(-1px);
+}
+
+.t3-button--primary {
+  background: linear-gradient(135deg, var(--t3-color-primary), #1d4ed8);
+  color: #f9fafb;
+  box-shadow: 0 14px 32px rgba(37, 99, 235, 0.55);
+}
+
+.t3-button--primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 40px rgba(37, 99, 235, 0.7);
+}
+
+.t3-button--primary:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.6);
+}
+
+.t3-button--secondary {
+  background: linear-gradient(135deg, rgba(148, 163, 184, 0.15), rgba(249, 250, 251, 0.98));
+  color: var(--t3-color-text);
+  border: 1px solid rgba(148, 163, 184, 0.55);
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.18);
+}
+
+.t3-button--secondary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.2);
+}
+
+.t3-button--secondary:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.2);
+}
+
+.t3-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+=======
+  cursor: pointer;
+  transition:
     transform var(--t3-transition-fast),
+    box-shadow var(--t3-transition-fast),
+    background var(--t3-transition-fast),
+    color var(--t3-transition-fast),
+    opacity var(--t3-transition-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.t3-button:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.8);
+  outline-offset: 2px;
+}
+
+.t3-button--primary {
+  background: linear-gradient(135deg, var(--t3-color-primary), #1d4ed8);
+  color: #f9fafb;
+  box-shadow: 0 14px 32px rgba(37, 99, 235, 0.55);
+}
+
+.t3-button--primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 40px rgba(37, 99, 235, 0.7);
+}
+
+.t3-button--primary:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.6);
+}
+
+.t3-button--secondary {
+  background: linear-gradient(135deg, rgba(148, 163, 184, 0.15), rgba(249, 250, 251, 0.98));
+  color: var(--t3-color-text);
+  border: 1px solid rgba(148, 163, 184, 0.55);
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.18);
+}
+
+.t3-button--secondary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.2);
+}
+
+.t3-button--secondary:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.2);
+}
+
+.t3-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
     box-shadow var(--t3-transition-fast),
     background var(--t3-transition-fast),
     color var(--t3-transition-fast),
@@ -570,6 +845,14 @@ body {
   .t3-card {
     padding: 1.4rem 1.3rem 1.15rem;
     border-radius: 20px;
+  }
+
+  .t3-start-header {
+    align-items: flex-start;
+  }
+
+  .t3-start-title {
+    font-size: 1.18rem;
   }
 
   .t3-board {
