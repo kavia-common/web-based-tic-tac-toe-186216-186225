@@ -3,8 +3,6 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import StartPage from './pages/StartPage.jsx';
 import ConfigPage from './pages/ConfigPage.jsx';
 import GamePage from './pages/GamePage.jsx';
-import GamePage from './pages/oG.jsx';
-invalid syntax here = ;
 
 /**
  * Root application component.
